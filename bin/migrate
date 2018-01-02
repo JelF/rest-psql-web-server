@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+set -e
+
+ROOT=$(dirname "$0")/..
+source $ROOT/bin/env
+
+export PGOPTIONS='--client-min-messages=warning'
+
+
+declare -A APPLIED_MIGRATIONS
+pg_run -f "$ROOT/objects/core/migrations.sql"
+APPLIED_MIGRATIONS["$ROOT/objects/core/migrations.sql"]=1
+
+function check() {
+  pg_run -c "SELECT app.CHECK_MIGRATION('$1')"
+}
+
+function setup {
+  if [[ ${APPLIED_MIGRATIONS[$1]} ]]; then return 0; fi
+  for dependency in $(grep -oP '\-\-\-\s*requires\s\K(.+)' "$1")
+  do setup "$(dirname $1)/$dependency"; done
+
+  pg_run -c "BEGIN; $(cat $1); SELECT app.REGISTER_MIGRATION('$1'); COMMIT;"
+  APPLIED_MIGRATIONS[$1]=1
+}
+
+function setup_migration {
+  migration=$1
+  if [[ ${APPLIED_MIGRATIONS[$migration]} ]]; then return 0; fi
+  if [[ $(check $migration) ]]; then return 0; fi
+
+  echo $(realpath $migration)
+  setup $migration
+}
+
+function setup_object {
+  object=$1
+  if [[ ${APPLIED_MIGRATIONS[$object]} ]]; then return 0; fi
+
+  if [[ ! $(check $object) ]]
+  then  echo $(realpath $object)
+  fi
+
+  setup "$object"
+}
+
+for migration in $(find $ROOT/migrations/ -name '*.sql'| sort)
+do setup_migration $migration
+done
+
+for object in $(find $ROOT/objects/ -name '*.sql')
+do setup_object $object
+done

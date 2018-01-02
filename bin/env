@@ -1,0 +1,3 @@
+function pg_run {
+  $PSQL "$DATABASE" -tAX -v "ON_ERROR_STOP=1" "$@"
+}

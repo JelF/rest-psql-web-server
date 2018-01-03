@@ -13,16 +13,19 @@ pg_run -f "$ROOT/objects/core/migrations.sql"
 APPLIED_MIGRATIONS["$ROOT/objects/core/migrations.sql"]=1
 
 function check() {
-  pg_run -c "SELECT app.CHECK_MIGRATION('$1')"
+  migration=$(realpath $1)
+  pg_run -c "SELECT app.CHECK_MIGRATION('$migration')"
 }
 
 function setup {
-  if [[ ${APPLIED_MIGRATIONS[$1]} ]]; then return 0; fi
-  for dependency in $(grep -oP '\-\-\-\s*requires\s\K(.+)' "$1")
-  do setup "$(dirname $1)/$dependency"; done
+  local migration=$(realpath $1)
+  if [[ ${APPLIED_MIGRATIONS[$migration]} ]]; then return 0; fi
+  for dependency in $(grep -oP '^\-\-\-\s*requires\s\K(.+)' "$migration")
+  do setup "$(dirname $migration)/$dependency"; done
 
-  pg_run -c "BEGIN; $(cat $1); SELECT app.REGISTER_MIGRATION('$1'); COMMIT;"
-  APPLIED_MIGRATIONS[$1]=1
+  echo $migration
+  pg_run -c "BEGIN; $(cat $migration); SELECT app.REGISTER_MIGRATION('$migration'); COMMIT;"
+  APPLIED_MIGRATIONS[$migration]=1
 }
 
 function setup_migration {
@@ -30,17 +33,12 @@ function setup_migration {
   if [[ ${APPLIED_MIGRATIONS[$migration]} ]]; then return 0; fi
   if [[ $(check $migration) ]]; then return 0; fi
 
-  echo $(realpath $migration)
   setup $migration
 }
 
 function setup_object {
   object=$1
   if [[ ${APPLIED_MIGRATIONS[$object]} ]]; then return 0; fi
-
-  if [[ ! $(check $object) ]]
-  then  echo $(realpath $object)
-  fi
 
   setup "$object"
 }

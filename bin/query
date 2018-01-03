@@ -4,4 +4,4 @@ ROOT=$(dirname "$0")/..
 source $ROOT/bin/env
 
 mkdir -p $ROOT/log
-pg_run -c "SELECT app.MAIN('$@')" 2> $ROOT/log/stderr.log
+pg_run -c "SELECT app.MAIN('$@' :: json)" 2>> $ROOT/log/stderr.log

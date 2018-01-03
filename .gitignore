@@ -1,2 +1,4 @@
 # copy env.bash.example
 env.bash
+log/
+tmp/

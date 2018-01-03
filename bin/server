@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -ex
+
+ROOT=$(dirname "$0")/..
+source $ROOT/bin/env
+
+mkdir -p $ROOT/tmp $ROOT/log
+
+# NOTE if $ROOT contains '@' we are doomed :(
+sed 's@<ROOT>@'"$(realpath $ROOT)"'@' < $ROOT/config/nginx.conf > $ROOT/tmp/nginx.compiled.conf
+$NGINX_BIN -c $(realpath $ROOT/tmp/nginx.compiled.conf)

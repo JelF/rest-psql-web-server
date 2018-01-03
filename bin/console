@@ -5,4 +5,4 @@ set -e
 ROOT=$(dirname "$0")/..
 source $ROOT/bin/env
 
-$PSQL $DATABASE
+$PSQL_BIN $DATABASE

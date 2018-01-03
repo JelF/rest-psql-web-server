@@ -1,3 +1,8 @@
+set -e
+
+ROOT=$(dirname "$0")/..
+source $ROOT/env.bash
+
 function pg_run {
-  $PSQL "$DATABASE" -tAX -v "ON_ERROR_STOP=1" "$@"
+  $PSQL_BIN "$DATABASE" -tAX -v "ON_ERROR_STOP=1" "$@"
 }

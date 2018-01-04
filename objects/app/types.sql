@@ -15,5 +15,5 @@ DROP TYPE IF EXISTS app.response CASCADE;
 CREATE TYPE app.response AS (
   status integer,
   body text,
-  headers json
+  headers jsonb
 );

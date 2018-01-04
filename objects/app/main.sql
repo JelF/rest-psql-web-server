@@ -1,4 +1,3 @@
---- requires ./util.sql
 --- requires ./router.sql
 
 CREATE OR REPLACE FUNCTION app.MAIN (data json)

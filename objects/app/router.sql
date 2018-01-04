@@ -9,28 +9,30 @@ CREATE TABLE app.routes (
   route_to TEXT NOT NULL
 );
 
+CREATE OR REPLACE FUNCTION app._router__run (query text, request app.request)
+RETURNS app.response AS $$
+  DECLARE
+    result app.response;
+  BEGIN
+    EXECUTE query USING request INTO STRICT result;
+    RETURN result;
+  END
+$$ LANGUAGE PLPGSQL;
+
 CREATE OR REPLACE FUNCTION app.route(request app.request)
 RETURNS app.response AS $$
-DECLARE
-  match text;
-  query text;
-  result app.response;
-BEGIN
-  match := (
-    SELECT route_to
+  SELECT app._router__run('SELECT (' || route_to || ').*;', request)
     FROM app.routes
-    WHERE COALESCE(request.uri LIKE uri_match, true)
+    WHERE COALESCE(request.uri ~ uri_match, true)
       AND COALESCE(ARRAY[request.method] <@ method_match, true)
     ORDER BY priority DESC
     LIMIT 1
-  );
+$$ LANGUAGE SQL;
 
-  query := 'SELECT (' || match || ').*;';
-
-  EXECUTE query USING request INTO STRICT result;
-  return result;
-END
-$$ LANGUAGE PLPGSQL;
-
-INSERT INTO app.routes(priority, uri_match, method_match, route_to) VALUES
-  (0, NULL, NULL, 'app.system_pages__not_found($1)')
+INSERT INTO app.routes(priority, method_match, uri_match, route_to) VALUES
+  (1000, '{GET}', '^/users$', 'app.users__index($1)'),
+  (1000, '{GET}', '^/users/\d+$', 'app.users__show($1)'),
+  (1000, '{POST}', '^/users$', 'app.users__create($1)'),
+  (1000, '{PUT}', '^/users/\d+$', 'app.users__update($1)'),
+  (1000, '{DELETE}', '^/users/\d+$', 'app.users__destroy($1)'),
+  (0, NULL, NULL, 'app.system_pages__not_found($1)');

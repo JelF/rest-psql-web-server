@@ -13,6 +13,7 @@ CREATE OR REPLACE FUNCTION app.route(request app.request)
 RETURNS app.response AS $$
 DECLARE
   match text;
+  query text;
   result app.response;
 BEGIN
   match := (
@@ -24,10 +25,12 @@ BEGIN
     LIMIT 1
   );
 
-  EXECUTE match USING request INTO STRICT result;
+  query := 'SELECT (' || match || ').*;';
+
+  EXECUTE query USING request INTO STRICT result;
   return result;
 END
 $$ LANGUAGE PLPGSQL;
 
 INSERT INTO app.routes(priority, uri_match, method_match, route_to) VALUES
-  (0, NULL, NULL, 'SELECT app.system_pages__not_found($1) :: app.response')
+  (0, NULL, NULL, 'app.system_pages__not_found($1)')

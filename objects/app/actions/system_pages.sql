@@ -2,7 +2,7 @@
 
 CREATE OR REPLACE FUNCTION app.system_pages__not_found(request app.request)
 RETURNS app.response AS $$
-  SELECT 404 AS code,
+  SELECT 404 AS status,
          '{"result": "not_found"}' :: text AS body,
-         '{}' :: json AS headers
+         '{"content-type": "application/json"}' :: json AS headers
 $$ LANGUAGE SQL;

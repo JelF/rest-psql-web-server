@@ -16,7 +16,7 @@ Logs are at `log/*`. Use `tail -F log/*` to observe them during debug
 
 nginx accepts request and calls lua script wich extracts request metadata
 and incodes it to json. JSON is passed to `bin/query` which executes `app.MAIN`
-with `psql` and gets text response wich is passed back.
+with `psql` and gets json with status, headers and body.
 Nginx config can be found at `config/ngix.conf` and processed by sed to
 replace <ROOT> with repo dir
 

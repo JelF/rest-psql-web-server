@@ -13,7 +13,7 @@ CREATE TYPE app.request AS (
 
 DROP TYPE IF EXISTS app.response CASCADE;
 CREATE TYPE app.response AS (
-  code integer,
+  status integer,
   body text,
   headers json
 );
